@@ -1,5 +1,6 @@
 #!/bin/sh
 wget https://github.com/KhronosGroup/SPIRV-Headers/archive/HEAD.tar.gz -O spirv-headers.tar.gz
+mkdir -p external/SPIRV-Headers
 tar xf spirv-headers.tar.gz -C external/SPIRV-Headers --strip 1
 
 # clean
