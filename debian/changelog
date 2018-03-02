@@ -1,0 +1,5 @@
+spirv-tools (2018.1~git9e19fc-1) UNRELEASED; urgency=medium
+
+  * Initial release (Closes: #890553)
+
+ -- Timo Aaltonen <tjaalton@debian.org>  Fri, 02 Mar 2018 15:40:21 +0200
