@@ -35,11 +35,14 @@
 #include "inline_exhaustive_pass.h"
 #include "inline_opaque_pass.h"
 #include "insert_extract_elim.h"
+#include "licm_pass.h"
 #include "local_access_chain_convert_pass.h"
 #include "local_redundancy_elimination.h"
 #include "local_single_block_elim_pass.h"
 #include "local_single_store_elim_pass.h"
 #include "local_ssa_elim_pass.h"
+#include "loop_unroller.h"
+#include "loop_unswitch_pass.h"
 #include "merge_return_pass.h"
 #include "null_pass.h"
 #include "private_to_local_pass.h"
@@ -52,5 +55,4 @@
 #include "strip_debug_info_pass.h"
 #include "unify_const_pass.h"
 #include "workaround1209.h"
-
 #endif  // LIBSPIRV_OPT_PASSES_H_

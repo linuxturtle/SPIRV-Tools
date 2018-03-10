@@ -12,26 +12,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef LIBSPIRV_OPT_LOOP_UTILS_H_
-#define LIBSPIRV_OPT_LOOP_UTILS_H_
+#ifndef SOURCE_OPT_LOOP_UTILS_H_
+#define SOURCE_OPT_LOOP_UTILS_H_
+#include <list>
+#include <memory>
+#include <vector>
+#include "opt/ir_context.h"
+#include "opt/loop_descriptor.h"
 
 namespace spvtools {
 
-namespace ir {
-class Loop;
-class IRContext;
-}  // namespace ir
-
 namespace opt {
 
-// Set of basic loop transformation.
+// LoopUtils is used to encapsulte loop optimizations and from the passes which
+// use them. Any pass which needs a loop optimization should do it through this
+// or through a pass which is using this.
 class LoopUtils {
  public:
-  LoopUtils(ir::IRContext* context, ir::Loop* loop)
-      : context_(context), loop_(loop) {}
+  // Holds a auxiliary results of the loop cloning procedure.
+  struct LoopCloningResult {
+    using ValueMapTy = std::unordered_map<uint32_t, uint32_t>;
+    using BlockMapTy = std::unordered_map<uint32_t, ir::BasicBlock*>;
 
-  // The make the current loop in the loop closed SSA form.
-  // In the loop closed SSA, all loop exiting values goes through a dedicate SSA
+    // Mapping between the original loop ids and the new one.
+    ValueMapTy value_map_;
+    // Mapping between original loop blocks to the cloned one.
+    BlockMapTy old_to_new_bb_;
+    // Mapping between the cloned loop blocks to original one.
+    BlockMapTy new_to_old_bb_;
+    // List of cloned basic block.
+    std::vector<std::unique_ptr<ir::BasicBlock>> cloned_bb_;
+  };
+
+  LoopUtils(ir::IRContext* context, ir::Loop* loop)
+      : context_(context),
+        loop_desc_(
+            context->GetLoopDescriptor(loop->GetHeaderBlock()->GetParent())),
+        loop_(loop),
+        function_(*loop_->GetHeaderBlock()->GetParent()) {}
+
+  // The converts the current loop to loop closed SSA form.
+  // In the loop closed SSA, all loop exiting values go through a dedicated Phi
   // instruction. For instance:
   //
   // for (...) {
@@ -64,12 +85,62 @@ class LoopUtils {
   // Preserves: CFG, def/use and instruction to block mapping.
   void CreateLoopDedicatedExits();
 
+  // Clone |loop_| and remap its instructions. Newly created blocks
+  // will be added to the |cloning_result.cloned_bb_| list, correctly ordered to
+  // be inserted into a function. If the loop is structured, the merge construct
+  // will also be cloned. The function preserves the def/use, cfg and instr to
+  // block analyses.
+  // The cloned loop nest will be added to the loop descriptor and will have
+  // owner ship.
+  ir::Loop* CloneLoop(
+      LoopCloningResult* cloning_result,
+      const std::vector<ir::BasicBlock*>& ordered_loop_blocks) const;
+
+  // Perfom a partial unroll of |loop| by given |factor|. This will copy the
+  // body of the loop |factor| times. So a |factor| of one would give a new loop
+  // with the original body plus one unrolled copy body.
+  bool PartiallyUnroll(size_t factor);
+
+  // Fully unroll |loop|.
+  bool FullyUnroll();
+
+  // This function validates that |loop| meets the assumptions made by the
+  // implementation of the loop unroller. As the implementation accommodates
+  // more types of loops this function can reduce its checks.
+  //
+  // The conditions checked to ensure the loop can be unrolled are as follows:
+  // 1. That the loop is in structured order.
+  // 2. That the continue block is a branch to the header.
+  // 3. That the only phi used in the loop is the induction variable.
+  //  TODO(stephen@codeplay.com): This is a temporary mesure, after the loop is
+  //  converted into LCSAA form and has a single entry and exit we can rewrite
+  //  the other phis.
+  // 4. That this is an inner most loop, or that loops contained within this
+  // loop have already been fully unrolled.
+  // 5. That each instruction in the loop is only used within the loop.
+  // (Related to the above phi condition).
+  bool CanPerformUnroll();
+
+  // Maintains the loop descriptor object after the unroll functions have been
+  // called, otherwise the analysis should be invalidated.
+  void Finalize();
+
  private:
   ir::IRContext* context_;
+  ir::LoopDescriptor* loop_desc_;
   ir::Loop* loop_;
+  ir::Function& function_;
+
+  // Populates the loop nest of |new_loop| according to |loop_| nest.
+  void PopulateLoopNest(ir::Loop* new_loop,
+                        const LoopCloningResult& cloning_result) const;
+
+  // Populates |new_loop| descriptor according to |old_loop|'s one.
+  void PopulateLoopDesc(ir::Loop* new_loop, ir::Loop* old_loop,
+                        const LoopCloningResult& cloning_result) const;
 };
 
 }  // namespace opt
 }  // namespace spvtools
 
-#endif  // LIBSPIRV_OPT_LOOP_UTILS_H_
+#endif  // SOURCE_OPT_LOOP_UTILS_H_

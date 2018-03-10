@@ -368,6 +368,15 @@ class Instruction : public utils::IntrusiveNodeBase<Instruction> {
   // constant value.
   bool IsFoldable() const;
 
+  // Returns true if |this| is an instruction which could be folded into a
+  // constant value by |FoldScalar|.
+  bool IsFoldableByFoldScalar() const;
+
+  // Returns true if we are allowed to fold or otherwise manipulate the
+  // instruction that defines |id| in the given context. This includes not
+  // handling NaN values.
+  bool IsFloatingPointFoldingAllowed() const;
+
   inline bool operator==(const Instruction&) const;
   inline bool operator!=(const Instruction&) const;
   inline bool operator<(const Instruction&) const;
@@ -379,6 +388,9 @@ class Instruction : public utils::IntrusiveNodeBase<Instruction> {
   // Returns true if |this| is an instruction defining a constant, but not a
   // Spec constant.
   inline bool IsConstant() const;
+
+  // Returns true if |this| is an instruction with an opcode safe to move
+  bool IsOpcodeCodeMotionSafe() const;
 
   // Pretty-prints |inst|.
   //
