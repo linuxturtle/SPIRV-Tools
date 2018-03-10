@@ -1,4 +1,4 @@
-spirv-tools (2018.1~git9e19fc-1) UNRELEASED; urgency=medium
+spirv-tools (2018.2-1) UNRELEASED; urgency=medium
 
   * Initial release (Closes: #890553)
 
