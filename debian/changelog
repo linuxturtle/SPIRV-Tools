@@ -1,8 +1,14 @@
-spirv-tools (2018.4-1) UNRELEASED; urgency=medium
+spirv-tools (2018.5+41-1) UNRELEASED; urgency=medium
+
+  * Build upstream ToT for SDK 1.1.85
+
+ -- Brett Johnson <brett@linuxturtle.net>  Mon, 01 Oct 2018 10:49:44 -0600
+
+spirv-tools (2018.4-1) unstable; urgency=medium
 
   * New upstream version
 
- -- Brett Johnson <brett@linuxturtle.net>  Wed, 25 Jul 2018 11:46:47 -0600
+ -- Brett Johnson <brett@linuxturtle.net>  Mon, 01 Oct 2018 10:49:44 -0600
 
 spirv-tools (2018.2-1) unstable; urgency=medium
 
